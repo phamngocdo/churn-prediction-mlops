@@ -30,6 +30,7 @@ dependencies = [
     "python-dotenv==1.0.1",
     "kagglehub>=1.0.2",
     "dvc>=3.67.1",
+    "ipykernel>=7.3.0",
 ]
 
 [project.optional-dependencies]
