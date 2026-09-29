@@ -1,0 +1,71 @@
+services:
+  garage:
+    build:
+      context: ./deployment/garage
+      dockerfile: Dockerfile.garage
+    container_name: garage
+    env_file: .env
+    environment:
+      GARAGE_DEFAULT_ACCESS_KEY: ${GARAGE_DEFAULT_ACCESS_KEY}
+      GARAGE_DEFAULT_SECRET_KEY: ${GARAGE_DEFAULT_SECRET_KEY}
+      GARAGE_DEFAULT_BUCKET: ${GARAGE_DEFAULT_BUCKET}
+      S3_DVC_BUCKET: ${S3_DVC_BUCKET}
+    volumes:
+      - ./deployment/garage/garage.toml:/etc/garage.toml:ro
+      - garage_meta:/var/lib/garage/meta
+      - garage_data:/var/lib/garage/data
+    ports:
+      - "3900:3900"   # S3 API
+      - "3901:3901"   # RPC
+      - "3903:3903"   # Admin API
+    healthcheck:
+      test: ["CMD", "/garage", "-c", "/etc/garage.toml", "status"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: mlflow-postgres
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile.mlflow
+    container_name: mlflow
+    env_file: .env
+    environment:
+      MLFLOW_S3_ENDPOINT_URL: ${GARAGE_ENDPOINT}
+      AWS_ACCESS_KEY_ID: ${GARAGE_DEFAULT_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${GARAGE_DEFAULT_SECRET_KEY}
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port ${MLFLOW_PORT}
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      --artifacts-destination s3://${GARAGE_DEFAULT_BUCKET}
+      --serve-artifacts
+    ports:
+      - "${MLFLOW_PORT}:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      garage:
+        condition: service_healthy
+
+volumes:
+  garage_meta:
+  garage_data:
+  postgres_data:

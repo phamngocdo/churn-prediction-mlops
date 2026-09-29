@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+deployment/garage/garage.toml
 
 *.log
 logs/

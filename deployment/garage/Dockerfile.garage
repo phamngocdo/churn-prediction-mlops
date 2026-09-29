@@ -1,0 +1,8 @@
+FROM dxflrs/garage:v2.3.0 AS garage-bin
+
+FROM alpine:3.20
+RUN apk add --no-cache libc6-compat
+COPY --from=garage-bin /garage /garage
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh /garage
+ENTRYPOINT ["/entrypoint.sh"]

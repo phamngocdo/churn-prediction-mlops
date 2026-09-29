@@ -362,6 +362,15 @@ wheels = [
 ]
 
 [[package]]
+name = "bytesparse"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d1/cc/80b72e82b3eae00f173da532ae69dcba4545f39b67cdf1d271958ceb3145/bytesparse-1.1.0.tar.gz", hash = "sha256:806cef0c13a78573560fd08bf7d3e2f56110147485f725d1ce954a3ee8199e53", size = 90990, upload-time = "2025-07-04T20:31:42.747Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c6/05/7a26d5ba5d489f40189668846e12199de72aaa0dc698fe5d799df2906d2d/bytesparse-1.1.0-py3-none-any.whl", hash = "sha256:addd47379ce042f526b4a920f67e3d6e4e92523ef4a10112b1a27ce5834753d3", size = 54546, upload-time = "2025-07-04T20:31:41.011Z" },
+]
+
+[[package]]
 name = "cachetools"
 version = "5.5.2"
 source = { registry = "https://pypi.org/simple" }
@@ -542,6 +551,7 @@ dependencies = [
     { name = "ipykernel" },
     { name = "kafka-python" },
     { name = "kagglehub" },
+    { name = "mflow" },
     { name = "mlflow" },
     { name = "numpy" },
     { name = "pandas" },
@@ -573,6 +583,7 @@ requires-dist = [
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "kafka-python", specifier = "==2.0.2" },
     { name = "kagglehub", specifier = ">=1.0.2" },
+    { name = "mflow", specifier = ">=1.3.1" },
     { name = "mlflow", specifier = "==2.15.1" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "pandas", specifier = "==2.2.2" },
@@ -2594,6 +2605,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d6/54/cfe61301667036ec958cb99bd3efefba235e65cdeb9c84d24a8293ba1d90/mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba", size = 8729, upload-time = "2022-08-14T12:40:10.846Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8", size = 9979, upload-time = "2022-08-14T12:40:09.779Z" },
+]
+
+[[package]]
+name = "mflow"
+version = "1.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiohttp" },
+    { name = "bytesparse" },
+    { name = "colorama" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/26/b0/bb937ac06021747a3b159daf1748b96424fc0fa761ff34fb06065e02871e/mflow-1.3.1.tar.gz", hash = "sha256:fdb9ba9add882608b98870d996af46ac18b31320168d01880bfcd7a0d6a7bc22", size = 20067, upload-time = "2025-08-30T15:11:52.47Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/54/46/36b505b9256a46959c9292dbe95d3462adb0a61adb79968e1d87ee79d71e/mflow-1.3.1-py3-none-any.whl", hash = "sha256:0ddaf01f41561644b43c7e451f939a74991a2a5ab18e5a056684e54143390cf4", size = 20749, upload-time = "2025-08-30T15:11:51.052Z" },
 ]
 
 [[package]]
