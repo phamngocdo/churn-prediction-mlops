@@ -42,8 +42,8 @@ services:
 
   mlflow:
     build:
-      context: .
-      dockerfile: deployment/mlflow/Dockerfile.mlflow
+      context: ./deployment/mlflow
+      dockerfile: Dockerfile.mlflow
     container_name: mlflow
     env_file: .env
     environment:
