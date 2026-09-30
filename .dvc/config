@@ -1,0 +1,5 @@
+[core]
+    remote = garage
+['remote "garage"']
+    url = s3://dvc-store
+    endpointurl = http://localhost:3900
