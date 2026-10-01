@@ -54,6 +54,7 @@ def train_model(
     train_df: pd.DataFrame,
     params: dict | None = None,
     register_model: bool = True,
+    test_df: pd.DataFrame | None = None,
 ) -> tuple[Pipeline, dict, dict]:
     """Train the XGBoost pipeline, log everything to MLflow, return the fitted pipeline.
 
@@ -62,6 +63,8 @@ def train_model(
             (not yet split into a validation set).
         params: hyperparameters for XGBClassifier, defaults to DEFAULT_PARAMS.
         register_model: if True, register the model in the MLflow Model Registry.
+        test_df: optional held-out test dataframe whose metrics are logged to the
+            same MLflow run as the train and validation metrics.
 
     Returns:
         (fitted_pipeline, train_metrics, val_metrics)
@@ -94,10 +97,22 @@ def train_model(
         mlflow.log_metrics({f"train_{k}": v for k, v in train_metrics.items()})
         mlflow.log_metrics({f"val_{k}": v for k, v in val_metrics.items()})
 
+        if test_df is not None:
+            test_metrics = evaluate_on_test(pipeline, test_df)
+            mlflow.log_metrics({f"test_{k}": v for k, v in test_metrics.items()})
+            logger.info("Test metrics: %s", test_metrics)
+
         mlflow.sklearn.log_model(
             sk_model=pipeline,
             artifact_path="model",
             registered_model_name=MODEL_REGISTRY_NAME if register_model else None,
+            serialization_format="skops",
+            skops_trusted_types=[
+                "numpy.dtype",
+                "sklearn.compose._column_transformer._RemainderColsList",
+                "xgboost.core.Booster",
+                "xgboost.sklearn.XGBClassifier",
+            ],
         )
 
         logger.info("Train metrics: %s", train_metrics)

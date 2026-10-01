@@ -93,6 +93,7 @@ def test_train_model_runs_and_logs_metrics(monkeypatch):
 
     pipeline, train_metrics, val_metrics = train_model(
         df,
+        test_df=df,
         params={"n_estimators": 20, "max_depth": 3, "learning_rate": 0.1},
         register_model=False,
     )
@@ -104,6 +105,7 @@ def test_train_model_runs_and_logs_metrics(monkeypatch):
     assert captured["registered_model_name"] is None
     assert "train_accuracy" in captured["metrics"]
     assert "val_accuracy" in captured["metrics"]
+    assert "test_accuracy" in captured["metrics"]
 
 
 def test_transform_to_dataframe_includes_feature_names_and_target():
