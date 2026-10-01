@@ -23,6 +23,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 15
+    networks: [mlops-net]
 
   postgres:
     image: postgres:16-alpine
@@ -39,6 +40,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks: [mlops-net] 
 
   mlflow:
     build:
@@ -50,20 +52,48 @@ services:
       MLFLOW_S3_ENDPOINT_URL: ${GARAGE_ENDPOINT}
       AWS_ACCESS_KEY_ID: ${GARAGE_DEFAULT_ACCESS_KEY}
       AWS_SECRET_ACCESS_KEY: ${GARAGE_DEFAULT_SECRET_KEY}
+      MLFLOW_SERVER_ALLOWED_HOSTS: "mlflow,mlflow:${MLFLOW_PORT},localhost,localhost:${MLFLOW_PORT},127.0.0.1,127.0.0.1:${MLFLOW_PORT}"
     command: >
       mlflow server
       --host 0.0.0.0
       --port ${MLFLOW_PORT}
-      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       --artifacts-destination s3://${GARAGE_DEFAULT_BUCKET}
       --serve-artifacts
     ports:
-      - "${MLFLOW_PORT}:5000"
+      - "${MLFLOW_PORT}:${MLFLOW_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
       garage:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${MLFLOW_PORT}/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks: [mlops-net] 
+
+  train:
+    build:
+      context: .
+      dockerfile: deployment/training/Dockerfile.train
+    container_name: churn-train
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:${MLFLOW_PORT} 
+      KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
+      KAGGLE_KEY: ${KAGGLE_API_TOKEN:-}
+    volumes:
+      - ./data:/app/data
+    networks: [mlops-net]
+    profiles: ["train"]
+
+networks:
+  mlops-net:
 
 volumes:
   garage_meta:
