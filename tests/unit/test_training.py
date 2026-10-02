@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from churn_mlops.data.loader import download_dataset, load_raw_data
 from churn_mlops.features.preprocessing import (
@@ -79,7 +80,7 @@ def test_train_model_runs_and_logs_metrics(monkeypatch):
     def fake_log_metrics(metrics):
         captured.setdefault("metrics", {}).update(metrics)
 
-    def fake_log_model(sk_model, artifact_path, registered_model_name=None):
+    def fake_log_model(sk_model, artifact_path, registered_model_name=None, **kwargs):
         captured["artifact_path"] = artifact_path
         captured["registered_model_name"] = registered_model_name
 
@@ -173,8 +174,5 @@ def test_load_raw_data_raises_when_no_csv_exists(tmp_path):
     empty_dir = tmp_path / "empty_dataset"
     empty_dir.mkdir()
 
-    try:
+    with pytest.raises(FileNotFoundError):
         load_raw_data(str(empty_dir))
-        assert False, "Expected FileNotFoundError"
-    except FileNotFoundError:
-        pass
