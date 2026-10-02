@@ -612,6 +612,11 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+api = [
+    { name = "fastapi" },
+    { name = "pyspark" },
+    { name = "uvicorn", extra = ["standard"] },
+]
 data = [
     { name = "dvc-s3" },
     { name = "evidently" },
@@ -627,15 +632,12 @@ dev = [
 orchestration = [
     { name = "prefect" },
 ]
-serve = [
-    { name = "fastapi" },
-    { name = "pyspark" },
-    { name = "streamlit" },
-    { name = "uvicorn", extra = ["standard"] },
-]
 train = [
     { name = "boto3" },
     { name = "xgboost" },
+]
+web = [
+    { name = "streamlit" },
 ]
 
 [package.metadata]
@@ -643,7 +645,7 @@ requires-dist = [
     { name = "boto3", marker = "extra == 'train'", specifier = "==1.34.155" },
     { name = "dvc-s3", marker = "extra == 'data'", specifier = "==3.3.0" },
     { name = "evidently", marker = "extra == 'data'", specifier = "==0.4.33" },
-    { name = "fastapi", marker = "extra == 'serve'", specifier = "==0.112.0" },
+    { name = "fastapi", marker = "extra == 'api'", specifier = "==0.112.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = "==0.27.0" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = "==7.3.0" },
     { name = "kagglehub", specifier = "==1.0.2" },
@@ -654,17 +656,17 @@ requires-dist = [
     { name = "prefect", marker = "extra == 'orchestration'", specifier = "==2.20.2" },
     { name = "pydantic", specifier = "==2.8.2" },
     { name = "pydantic-settings", specifier = "==2.4.0" },
-    { name = "pyspark", marker = "extra == 'serve'", specifier = "==4.2.0" },
+    { name = "pyspark", marker = "extra == 'api'", specifier = "==4.2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.2" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==5.0.0" },
     { name = "python-dotenv", specifier = "==1.0.1" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.5.7" },
     { name = "scikit-learn", specifier = "==1.5.1" },
-    { name = "streamlit", marker = "extra == 'serve'", specifier = "==1.56.0" },
-    { name = "uvicorn", extras = ["standard"], marker = "extra == 'serve'", specifier = "==0.30.5" },
+    { name = "streamlit", marker = "extra == 'web'", specifier = "==1.56.0" },
+    { name = "uvicorn", extras = ["standard"], marker = "extra == 'api'", specifier = "==0.30.5" },
     { name = "xgboost", marker = "extra == 'train'", specifier = "==2.1.0" },
 ]
-provides-extras = ["train", "serve", "orchestration", "data", "dev"]
+provides-extras = ["train", "api", "web", "orchestration", "data", "dev"]
 
 [[package]]
 name = "click"

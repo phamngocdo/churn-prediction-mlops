@@ -32,10 +32,13 @@ train = [
     "boto3==1.34.155",
 ]
 
-serve = [
+api = [
     "fastapi==0.112.0",
     "uvicorn[standard]==0.30.5",
     "pyspark==4.2.0",
+]
+
+web = [
     "streamlit==1.56.0",
 ]
 
@@ -71,6 +74,8 @@ filterwarnings = [
     # "model_name" conflicts with Pydantic v2's protected "model_" namespace).
     # Not caused by our code, nothing we can fix on our side -- safe to ignore.
     'ignore:Field "model_name" has conflict with protected namespace:UserWarning',
+    # Starlette 0.37's TestClient imports AnyIO's deprecated BlockingPortal alias.
+    'ignore:The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead:DeprecationWarning',
 ]
 
 # ---- ruff ----
