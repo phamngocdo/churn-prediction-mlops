@@ -133,3 +133,42 @@ def install_frontend_api_bridge(monkeypatch, client):
     monkeypatch.setattr(requests, "post", post)
     return calls
 
+
+def test_streamlit_single_customer_form_calls_backend(serving_client, monkeypatch):
+    client, _, _ = serving_client
+    calls = install_frontend_api_bridge(monkeypatch, client)
+    app_path = Path(__file__).resolve().parents[2] / "src/churn_mlops/serving/streamlit_app.py"
+
+    app = AppTest.from_file(str(app_path)).run()
+    app.text_input[0].set_value("UI-100")
+    app.number_input[0].set_value(30.0)
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert calls[0][0] == "/predict"
+    assert calls[0][1]["customerID"] == "UI-100"
+    assert calls[0][1]["SeniorCitizen"] == "No"
+    assert app.metric[0].label == "⚠️ Will churn"
+    assert app.metric[0].value == "80.0% probability of churn"
+
+
+def test_streamlit_csv_upload_scores_and_exposes_download(serving_client, monkeypatch):
+    client, _, _ = serving_client
+    calls = install_frontend_api_bridge(monkeypatch, client)
+    app_path = Path(__file__).resolve().parents[2] / "src/churn_mlops/serving/streamlit_app.py"
+    app = AppTest.from_file(str(app_path)).run()
+
+    records = pd.DataFrame(
+        [make_record("UI-1", 10), make_record("UI-2", 40)]
+    ).drop(columns=["customerID"])
+    csv_bytes = records.to_csv(index=False).encode("utf-8")
+    app.file_uploader[0].set_value(("customers.csv", csv_bytes, "text/csv")).run()
+    app.button[1].click().run()
+
+    assert not app.exception
+    assert calls[0][0] == "/predict_batch"
+    assert len(calls[0][1]["records"]) == 2
+    assert app.success[0].value == "Done! Preview of results:"
+    scored = app.dataframe[1].value
+    assert {"churn_prediction", "churn_probability"}.issubset(scored.columns)
+    assert scored["churn_prediction"].tolist() == [0, 1]
