@@ -23,6 +23,7 @@ dependencies = [
     "python-dotenv==1.0.1",
     "mlflow==3.16.1",
     "kagglehub==1.0.2",
+
 ]
 
 [project.optional-dependencies]
@@ -34,6 +35,8 @@ train = [
 serve = [
     "fastapi==0.112.0",
     "uvicorn[standard]==0.30.5",
+    "pyspark==4.2.0",
+    "streamlit==1.56.0",
 ]
 
 orchestration = [
@@ -63,6 +66,12 @@ include = ["churn_mlops*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -q --cov=churn_mlops --cov-report=term-missing --cov-fail-under=75"
+filterwarnings = [
+    # Upstream warning from MLflow's internal Pydantic models (field name
+    # "model_name" conflicts with Pydantic v2's protected "model_" namespace).
+    # Not caused by our code, nothing we can fix on our side -- safe to ignore.
+    'ignore:Field "model_name" has conflict with protected namespace:UserWarning',
+]
 
 # ---- ruff ----
 [tool.ruff]
