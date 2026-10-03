@@ -92,6 +92,36 @@ services:
     networks: [mlops-net]
     profiles: ["train"]
 
+  api:
+    build:
+      context: .
+      dockerfile: deployment/web/Dockerfile.api
+    container_name: churn-api
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:${MLFLOW_PORT}
+      MODEL_REGISTRY_NAME: ${MODEL_REGISTRY_NAME:-churn_model}
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    networks: [mlops-net]
+
+  web:
+    build:
+      context: .
+      dockerfile: deployment/web/Dockerfile.web
+    container_name: churn-web
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "${WEB_PORT:-8501}:8501"
+    depends_on:
+      - api
+    networks: [mlops-net]
+
 networks:
   mlops-net:
 
