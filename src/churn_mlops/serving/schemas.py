@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel, Field, create_model
+from pydantic import BaseModel, BeforeValidator, Field, create_model
 
 from churn_mlops.features.field_definitions import FIELD_SPECS
 
@@ -9,8 +9,21 @@ def _python_type(kind: str):
     return float if kind == "numeric" else str
 
 
+def _blank_to_none(value):
+    return None if isinstance(value, str) and not value.strip() else value
+
+
 _dynamic_fields = {
-    spec.name: (_python_type(spec.kind), Field(default=spec.default, description=spec.label))
+    spec.name: (
+        (
+            Annotated[float | None, BeforeValidator(_blank_to_none)]
+            if spec.name == "TotalCharges"
+            else Literal[0, 1, "No", "Yes"]
+            if spec.name == "SeniorCitizen"
+            else _python_type(spec.kind)
+        ),
+        Field(default=spec.default, description=spec.label),
+    )
     for spec in FIELD_SPECS
 }
 # customerID is not a model feature (it's dropped by clean_features) but is

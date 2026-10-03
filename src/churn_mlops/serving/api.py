@@ -5,7 +5,9 @@ from contextlib import asynccontextmanager
 import mlflow
 import mlflow.sklearn
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 
 from churn_mlops.config import MLFLOW_TRACKING_URI, MODEL_REGISTRY_NAME
 from churn_mlops.features.field_definitions import FIELD_SPECS
@@ -35,6 +37,26 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="Churn Prediction API", version="1.0.0", lifespan=lifespan)
+
+
+@app.exception_handler(RequestValidationError)
+async def log_request_validation_error(request: Request, exc: RequestValidationError):
+    """Log validation locations without logging customer-provided values."""
+    diagnostics = [
+        {
+            "location": ".".join(str(part) for part in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"],
+        }
+        for error in exc.errors()
+    ]
+    logger.warning(
+        "Request validation failed: method=%s path=%s errors=%s",
+        request.method,
+        request.url.path,
+        diagnostics,
+    )
+    return await request_validation_exception_handler(request, exc)
 
 
 @app.get("/health")

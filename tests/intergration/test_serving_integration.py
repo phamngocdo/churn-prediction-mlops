@@ -102,7 +102,31 @@ def test_api_startup_single_and_batch_prediction(serving_client):
     assert single_features["TotalCharges"].dtype.kind == "f"
 
 
-def test_api_reports_not_ready_and_rejects_invalid_payload(serving_client):
+def test_batch_accepts_raw_numeric_senior_citizen_values(serving_client):
+    client, model, _ = serving_client
+    records = [make_record("C-6", tenure=10), make_record("C-7", tenure=40)]
+    records[0]["SeniorCitizen"] = 0
+    records[1]["SeniorCitizen"] = 1
+
+    response = client.post("/predict_batch", json={"records": records})
+
+    assert response.status_code == 200
+    assert [row["customerID"] for row in response.json()] == ["C-6", "C-7"]
+    assert model.feature_batches[0]["SeniorCitizen"].tolist() == [0, 1]
+
+
+def test_batch_accepts_blank_total_charges(serving_client):
+    client, model, _ = serving_client
+    record = make_record("C-8", tenure=10)
+    record["TotalCharges"] = ""
+
+    response = client.post("/predict_batch", json={"records": [record]})
+
+    assert response.status_code == 200
+    assert model.feature_batches[0]["TotalCharges"].isna().tolist() == [True]
+
+
+def test_api_reports_not_ready_and_rejects_invalid_payload(serving_client, caplog):
     client, _, _ = serving_client
 
     api._model = None
@@ -115,6 +139,14 @@ def test_api_reports_not_ready_and_rejects_invalid_payload(serving_client):
     invalid["tenure"] = "not-a-number"
     response = client.post("/predict", json=invalid)
     assert response.status_code == 422
+
+    invalid_batch = make_record("C-8", tenure=10)
+    invalid_batch["SeniorCitizen"] = "invalid-private-value"
+    response = client.post("/predict_batch", json={"records": [invalid_batch]})
+    assert response.status_code == 422
+    assert "path=/predict_batch" in caplog.text
+    assert "records.0.SeniorCitizen" in caplog.text
+    assert "invalid-private-value" not in caplog.text
 
 
 def install_frontend_api_bridge(monkeypatch, client):

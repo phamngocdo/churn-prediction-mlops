@@ -47,8 +47,15 @@ with tab_form:
             st.error(f"Request to the API failed: {exc}")
         else:
             is_churn = result["churn_prediction"] == 1
-            label = "⚠️ Will churn" if is_churn else "✅ Will stay"
-            st.metric(label, f"{result['churn_probability']:.1%} probability of churn")
+            churn_prob = result["churn_probability"]
+
+            if is_churn:
+                st.metric("⚠️ Will churn", f"{churn_prob:.1%} probability of churn")
+            else:
+                st.metric("✅ Will stay", f"{1 - churn_prob:.1%} probability of staying")
+
+            st.caption(f"(Raw churn probability: {churn_prob:.1%} — threshold for 'will churn' is 50%)")
+            st.progress(churn_prob)
 
 # ---------------------------------------------------------------------------
 # Tab 2: batch scoring via file upload
