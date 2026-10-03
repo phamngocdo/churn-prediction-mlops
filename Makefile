@@ -1,8 +1,7 @@
 .PHONY: \
 	install lock setup \
 	up down logs ps clean \
-	garage-status garage-layout garage-buckets garage-bucket-info \
-	garage-keys garage-key-info garage-health \
+	minio-status minio-buckets minio-bucket-info minio-health \
 	train
 
 # ============================================================
@@ -42,39 +41,36 @@ clean:
 
 
 # ============================================================
-# Garage
+# MinIO (AIStor)
 # ============================================================
+# AIStor's server image does not bundle the `mc` client, so instead of
+# `docker compose exec minio ...` (like Garage's binary), we reuse the
+# `init-minio-bucket` service's image/credentials/network via
+# `docker compose run` and call the AWS CLI against MinIO's S3-compatible
+# endpoint. --no-deps avoids re-triggering the service's depends_on chain
+# since minio is normally already running when you call these targets.
 
-GARAGE_EXEC = docker compose exec -T garage /garage -c /etc/garage.toml
+MINIO_EXEC = docker compose run --rm --no-deps --entrypoint aws init-minio-bucket --endpoint-url http://minio:9000
 
-garage-status:
-	@$(GARAGE_EXEC) status
+minio-status:
+	@echo "== MinIO health =="
+	@curl -sf http://localhost:9000/minio/health/live > /dev/null \
+		&& echo "MinIO is reachable on :9000" \
+		|| echo "MinIO is NOT reachable on :9000"
 
-garage-layout:
-	@$(GARAGE_EXEC) layout show
+minio-buckets:
+	@$(MINIO_EXEC) s3 ls
 
-garage-buckets:
-	@$(GARAGE_EXEC) bucket list
-
-garage-bucket-info:
+minio-bucket-info:
 	@test -n "$(BUCKET)" || \
-		(echo "Usage: make garage-bucket-info BUCKET=dvc-store" && exit 1)
-	@$(GARAGE_EXEC) bucket info $(BUCKET)
+		(echo "Usage: make minio-bucket-info BUCKET=mlflow-artifacts" && exit 1)
+	@$(MINIO_EXEC) s3api head-bucket --bucket $(BUCKET) \
+		&& echo "Bucket '$(BUCKET)' exists and is reachable."
 
-garage-keys:
-	@$(GARAGE_EXEC) key list
-
-garage-key-info:
-	@test -n "$(KEY)" || \
-		(echo "Usage: make garage-key-info KEY=dev-key" && exit 1)
-	@$(GARAGE_EXEC) key info $(KEY)
-
-garage-health:
-	@echo "== Cluster status =="
-	@$(GARAGE_EXEC) status
+minio-health: minio-status
 	@echo ""
 	@echo "== Buckets =="
-	@$(GARAGE_EXEC) bucket list
+	@$(MINIO_EXEC) s3 ls
 
 
 # ============================================================
